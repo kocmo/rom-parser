@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 	char answer;
 	unsigned char csum, *data;
 
-	if (argc != 2)
+	if (argc < 2)
 		return usage(argv[0]);
 
 	if (stat(argv[1], &st)) {
@@ -157,61 +157,21 @@ next:
 
 #ifdef FIXER
 ask_vendor:
-	printf("\nModify vendor ID %04x? (y/n): ", pcir->vendor);
-	answer = getchar();
-	getchar();
-	switch (tolower(answer)) {
-	case 'n':
-		break;
-	case 'y':
-	{
-		unsigned short vendor;
+    if (argc >=3) {
+        unsigned short vendor;
 
-		printf("New vendor ID: ");
-		ret = scanf("%hx", &vendor);
-		getchar();
-		if (ret == 1) {
-			printf("Overwrite vendor ID with %04x? (y/n): ", vendor);
-			answer = getchar();
-			getchar();
-			if (tolower(answer) == 'y') {
-				pcir->vendor = vendor;
-				break;
-			}
-		}
-	}
-	default:
-		printf("Unrecognized response, try again\n");
-		goto ask_vendor;
+		ret = sscanf(argv[2], "%hx", &vendor);
+        printf("\tNew vendor ID: %04x\n", vendor);
+        pcir->vendor = vendor;
 	}
 
 ask_device:
-	printf("Modify device ID %04x? (y/n): ", pcir->device);
-	answer = getchar();
-	getchar();
-	switch (tolower(answer)) {
-	case 'n':
-		break;
-	case 'y':
-	{
+    if (argc >=4) {
 		unsigned short device;
 
-		printf("New device ID: ");
-		ret = scanf("%hx", &device);
-		getchar();
-		if (ret == 1) {
-			printf("Overwrite device ID with %04x? (y/n): ", device);
-			answer = getchar();
-			getchar();
-			if (tolower(answer) == 'y') {
-				pcir->device = device;
-				break;
-			}
-		}
-	}
-	default:
-		printf("Unrecognized response, try again\n");
-		goto ask_device;
+		ret = sscanf(argv[3], "%hx", &device);
+		printf("\tNew device ID: %04x\n", device);
+        pcir->device = device;
 	}
 #endif
 
@@ -229,19 +189,8 @@ ask_device:
 
 	if (csum) {
 ask_csum:
-		printf("ROM checksum is invalid, fix? (y/n): ");
-		answer = getchar();
-		getchar();
-		switch (tolower(answer)) {
-		case 'n':
-			break;
-		case 'y':
-			data[6] = -(csum - data[6]);
-			break;
-		default:
-			printf("Unrecognized response, try again\n");
-			goto ask_csum;
-		}
+		printf("Fix ROM checksum");
+        data[6] = -(csum - data[6]);
 	} else
 		printf("ROM checksum OK\n");
 #endif
